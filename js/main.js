@@ -6,9 +6,9 @@ app.factory('MQQTNG',function($http,$q){
 });
 
 app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $http, mq){
-	$scope.host='google.com';
-	$scope.port=80;
-	$scope.path='/message';
+	// $scope.host='google.com';
+	// $scope.port=80;
+	$scope.path='/mqtt';
 	$scope.clientId='2301948';
 
 	//connection details
@@ -25,6 +25,8 @@ app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $h
 	var clientMQ;
 
 	$scope.hello = "Paho.MQQT";
+
+	$scope.qos = ['0','1','2'];
 
 	$scope.connectOrDisconnect = function(){
 		if(!clientMQ){
@@ -55,14 +57,14 @@ app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $h
 
 	$scope.publish = function(){
 		mq.Client.connect();
-		console.log('Publish Triggered')	
+		console.log('Publish Triggered')
 	};
 	$scope.subscribe = function(){
 		mq.Client.connect();
 		console.log('Subscribe Triggered')
 	};
 	$scope.unsubscribe = function(){
-		MQQTNG.CONNECT();	
+		MQQTNG.CONNECT();
 		console.log('Unsubscribe Triggered')
 	};
 

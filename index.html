@@ -17,43 +17,81 @@
     <script src="js/vendor/modernizr-2.6.2.min.js"></script>
 </head>
 <body ng-app="app" ng-controller="appController">
-    <div class="container"> 
+    <div class="container">
         <h1>{{hello}}</h1>
-        <div class="row block">
-            <div class="col-xs-4">
-              <div class="form-group">
-                <label>Host</label>
-                <input type="text" class="form-control" ng-model="host">
-              </div>
-              <div class="form-group">
-                <label>Port</label>
-                <input type="text" class="form-control" ng-model="port">
-              </div>
-              <div class="form-group">
-                <label>Path</label>
-                <input type="text" class="form-control" ng-model="path">
-              </div>
-              <div class="form-group">
-                <label>Client Id</label>
-                <input type="text" class="form-control" ng-model="clientId">
-              </div>
-              <div class="form-group">
-                <label>Username</label>
-                <input type="text" class="form-control" ng-model="userName">
-              </div>
-              <div class="form-group">
-                <label>Password</label>
-                <input type="password" class="form-control" ng-model="password">
-              </div>
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" ng-checked="useSSL" > Use SSL
-                </label>
-              </div>
-                <button class="btn btn-success" ng-click="connectOrDisconnect()"> {{stateNext}}</button>
-                <button class="btn btn-primary" ng-click="publish()"> Publish</button>
-                <button class="btn btn-info" ng-click="subscribe()"> Subscribe</button>
-                <button class="btn btn-warning" ng-click="unsubscribe()"> Unsubscribe</button>
+        <div class="panel">
+            <div class="row">
+                <form >
+                    <div class="form-group col-lg-5">
+                        <label>Host</label>
+                        <input class="form-control" id="urlInput" ng-model="host" type="text" value="broker.mqttdashboard.com">
+                    </div>
+
+                    <div class="form-group col-lg-1">
+                        <label>Port</label>
+                        <input class="form-control" id="portInput" type="number" ng-model="port">
+                    </div>
+
+                    <div class="form-group col-lg-4">
+                        <label>ClientID</label>
+                        <input class="form-control" ng-model="clientId" id="clientIdInput" type="text">
+                    </div>
+
+                    <div class="form-group col-lg-2">
+                      <button class="btn btn-success" ng-click="connectOrDisconnect()"> {{stateNext}}</button>
+                    </div>
+
+                    <!-- <div class="form-group col-lg-2">
+                        <a id="disconnectButton" class="btn btn-primary" onclick="websocketclient.disconnect();">Disconnect</a>
+                    </div> -->
+
+                    <div class="form-group col-lg-4">
+                        <label>Username</label>
+                        <input class="form-control" ng-model="userName" id="userInput" type="text">
+                    </div>
+
+                    <div class="form-group col-lg-3">
+                        <label>Password</label>
+                        <input class="form-control" ng-model="password" id="pwInput" type="password">
+                    </div>
+
+                    <div class="form-group col-lg-2">
+                        <label>Keep Alive</label>
+                        <input class="form-control" id="keepAliveInput" type="text" value="60">
+                    </div>
+
+                    <div class="form-group col-lg-1">
+                        <label>SSL</label>
+                        <input id="sslInput" ng-model="useSSL" class="checkbox" type="checkbox">
+                    </div>
+
+                    <div class="form-group col-lg-2">
+                        <label>Clean Session</label>
+                        <input class="checkbox" ng-model="cleanSession" id="cleanSessionInput" type="checkbox" checked="checked" disabled="disabled">
+                    </div>
+
+                    <div class="form-group col-lg-8">
+                        <label>Last-Will Topic</label>
+                        <input class="form-control" id="lwTopicInput" type="text">
+                    </div>
+
+                    <div class="form-group col-lg-2">
+                      <label>Last-Will QoS</label>
+                      <select class="form-control">
+                        <option ng-repeat="item in qos" value="{{item}}">{{item}}</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group col-lg-2">
+                        <label>Last-Will Retain</label>
+                        <input class="checkbox" id="LWRInput" type="checkbox">
+                    </div>
+
+                    <div class="form-group col-lg-12">
+                        <label>Last-Will Messsage</label>
+                        <textarea class="form-control" id="LWMInput"></textarea>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
