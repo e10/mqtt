@@ -6,66 +6,110 @@ app.factory('MQQTNG',function($http,$q){
 });
 
 app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $http, mq){
-	// $scope.host='google.com';
-	// $scope.port=80;
+	$scope.host='messagesight.demos.ibm.com';
+	$scope.port=1883;
 	$scope.path='/mqtt';
-	$scope.clientId='2301948';
+	$scope.clientId='Client87758';
 
 	//connection details
-	$scope.userName='anuj';
-	$scope.password='password';
+	$scope.userName='';
+	$scope.password='';
 	$scope.cleanSession=false;
 	$scope.useSSL=false;
+	$scope.hideBelow=true;
 
 	//state values;
 	$scope.isConnected=false;
 	$scope.stateNext='Connect';
+	$scope.status='Idle';
 	$scope.error='';
 
-	var clientMQ;
+	//publish
+	$scope.message="your message here";
+	$scope.qos=0;
+	$scope.destinationName="/world";
+	$scope.subscriptions=[];
+	$scope.messages=[];
 
-	$scope.hello = "Paho.MQQT";
+	var client;
 
 	$scope.qos = ['0','1','2'];
 
 	$scope.connectOrDisconnect = function(){
-		if(!clientMQ){
-			clientMQ=new mq.Client($scope.host,$scope.port,$scope.path,$scope.clientId);
+
+		if(client && client.isConnected()){
+			client.disconnect();
+			$scope.stateNext='Connect';
+			return;
 		}
+
+		$scope.stateNext='Connecting';
+
+		client = new mq.Client($scope.host, Number($scope.port), $scope.clientId);
+		client.onConnectionLost = onConnectionLost;
+		client.onMessageArrived = onMessageArrived;
+
+		function onConnect() {
+			$scope.status='Connected';
+			$scope.hideBelow=false;
+			$scope.isConnected=true;
+			$scope.stateNext='Disconnect';
+			$scope.$apply();
+		};
+
+		function onConnectionLost(responseObject) {
+		  	$scope.status='Disconnected';
+		  	$scope.hideBelow=true;
+			$scope.isConnected=false;
+		  	if (responseObject.errorCode !== 0)
+				console.log("onConnectionLost:"+responseObject.errorMessage);
+			$scope.$apply();
+		};
+
+		function onMessageArrived(message) {
+			$scope.messages.push(message);
+		  	console.log("onMessageArrived",message);
+		  	$scope.$apply();
+		};
+
 		if(!$scope.isConnected){
-			$scope.stateNext='Connecting';
-			clientMQ.connect({
-				userName:$scope.userName,
-				password:$scope.password,
-				cleanSession:$scope.cleanSession,
-				useSSL:$scope.useSSL,
-				onSuccess:function(){
-					$scope.isConnected=true;
-					$scope.stateNext='Disconnect';
-					console.log('Connected');
-				},
-				onFailure:function(){
-					$scope.stateNext='Connect';
-					$scope.error='connection failed';
-				}
-			});
+			var p={onSuccess:onConnect,onFailure:function(e){
+				$scope.status='Failed : '+e.errorMessage;
+				$scope.stateNext='Connect';
+				$scope.error='connection failed';
+			}};
+			if(!!$scope.userName){ p.userName=$scope.userName; }
+			if(!!$scope.password){ p.password=$scope.password; }
+			if(!!$scope.cleanSession){ p.cleanSession=$scope.cleanSession; }
+			if(!!$scope.useSSL){ p.useSSL=$scope.useSSL; }
+			client.connect(p);
 		}else{
-			clientMQ.disconnect();
-			console.log('Connect Triggered');
+			$scope.disconnect();
 		}
 	};
 
+	$scope.disconnect=function(){
+		$scope.status='Disconnected';
+	}
+
 	$scope.publish = function(){
-		mq.Client.connect();
-		console.log('Publish Triggered')
+		var message = new mq.Message($scope.message);
+		message.destinationName =$scope.topic;
+		client.send(message);
 	};
-	$scope.subscribe = function(){
-		mq.Client.connect();
+	$scope.subscribeConnection = function(){
+		client.subscribe($scope.destinationName);
+		$scope.subscriptions.push({
+			value:$scope.destinationName,
+			unsubscribe:function(){
+				client.unsubscribe(this.value);
+				$scope.subscriptions.remove(this);
+			}
+		})
+		$scope.topic=$scope.destinationName;
+		$scope.destinationName="";
+		$scope.$apply();
 		console.log('Subscribe Triggered')
-	};
-	$scope.unsubscribe = function(){
-		MQQTNG.CONNECT();
-		console.log('Unsubscribe Triggered')
 	};
 
 }]);

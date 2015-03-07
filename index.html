@@ -18,32 +18,25 @@
 </head>
 <body ng-app="app" ng-controller="appController">
     <div class="container">
-        <h1>{{hello}}</h1>
-        <div class="panel">
+        <h1>{{status}}</h1>
+        <button class="btn btn-success" ng-click="connectOrDisconnect()"> {{stateNext}}</button>
+        <div class="panel" ng-show="hideBelow">
             <div class="row">
                 <form >
                     <div class="form-group col-lg-5">
                         <label>Host</label>
-                        <input class="form-control" id="urlInput" ng-model="host" type="text" value="broker.mqttdashboard.com">
+                        <input class="form-control" id="urlInput" ng-model="host" type="text">
                     </div>
 
-                    <div class="form-group col-lg-1">
+                    <div class="form-group col-lg-2">
                         <label>Port</label>
                         <input class="form-control" id="portInput" type="number" ng-model="port">
                     </div>
 
-                    <div class="form-group col-lg-4">
-                        <label>ClientID</label>
+                    <div class="form-group col-lg-3">
+                        <label>Client Id</label>
                         <input class="form-control" ng-model="clientId" id="clientIdInput" type="text">
                     </div>
-
-                    <div class="form-group col-lg-2">
-                      <button class="btn btn-success" ng-click="connectOrDisconnect()"> {{stateNext}}</button>
-                    </div>
-
-                    <!-- <div class="form-group col-lg-2">
-                        <a id="disconnectButton" class="btn btn-primary" onclick="websocketclient.disconnect();">Disconnect</a>
-                    </div> -->
 
                     <div class="form-group col-lg-4">
                         <label>Username</label>
@@ -92,6 +85,55 @@
                         <textarea class="form-control" id="LWMInput"></textarea>
                     </div>
                 </form>
+            </div>
+        </div>
+        <div class="row" ng-show="isConnected">
+            <div class="col-md-9">
+                <h2>Publish</h2>
+                <div class="row">
+                    <div class="form-group col-lg-4">
+                        <label>Topic</label>
+                        <input id="publishTopic" class="form-control" type="text" ng-model="topic">
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <label for="publishQoSInput">QoS</label>
+                        <select id="publishQoSInput" class="form-control" ng-model="qos">
+                            <option>0</option>
+                            <option>1</option>
+                            <option>2</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-lg-2">
+                        <label>Retain</label>
+                        <input id="publishRetain" class="form-control" type="checkbox" ng-model="retain">
+                    </div>
+                    <div class="lform-group col-lg-3">
+                        <a class="btn btn-success" ng-click="publish()">Publish</a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-lg-12">
+                        <label>Message</label>
+                        <textarea id="publishPayload" class="form-control"  ng-model="message"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <h2>Subscriptions</h2>
+                <ul class="unstyled">
+                  <li ng-repeat="item in subscriptions">
+                    <span>{{item.value}}</span>
+                    <a class="btn btn-success" ng-click="item.unsubscribe()">Un Subscribe</a>
+                  </li>
+                </ul>
+                <input type="text" class="form-control" ng-model="destinationName" />
+                <a class="btn btn-success" ng-click="subscribeConnection()">Subscribe</a>
+            </div>
+        </div>
+        <div class="row">
+            <div ng-repeat="msg in messages" ng-show="isConnected">
+                <div class="col-md-2"> {{msg.destinationName}} </div>
+                <div class="col-md-10"> {{msg.payloadString}} </div>
             </div>
         </div>
     </div>
