@@ -103,7 +103,7 @@ app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $h
 			value:$scope.destinationName,
 			unsubscribe:function(){
 				client.unsubscribe(this.value);
-				$scope.subscriptions.remove(this);
+				$scope.subscriptions.splice($scope.subscriptions.indexOf(this),1);
 			}
 		})
 		$scope.topic=$scope.destinationName;
