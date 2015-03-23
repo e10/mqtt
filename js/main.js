@@ -63,7 +63,7 @@ app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $h
 			$scope.isConnected=false;
 		  	if (responseObject.errorCode !== 0)
 				console.log("onConnectionLost:"+responseObject.errorMessage);
-			$scope.$apply();
+			
 		};
 
 		function onMessageArrived(message) {
@@ -108,7 +108,7 @@ app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $h
 		})
 		$scope.topic=$scope.destinationName;
 		$scope.destinationName="";
-	
+
 		console.log('Subscribe Triggered')
 	};
 
