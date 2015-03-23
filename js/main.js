@@ -108,7 +108,7 @@ app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $h
 		})
 		$scope.topic=$scope.destinationName;
 		$scope.destinationName="";
-		$scope.$apply();
+	
 		console.log('Subscribe Triggered')
 	};
 
