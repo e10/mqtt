@@ -63,7 +63,8 @@ app.factory('MQQTNG',function($http,$q){
 			send:function(){
 				var msg = new Paho.MQTT.Message(this.message);
 				msg.destinationName=this.topic;
-				that.client.send(msg);				
+				that.client.send(msg);
+				this.message='';	
 			}
 		};
 		that.client.subscribe(topic);
@@ -99,7 +100,6 @@ app.factory('MQQTNG',function($http,$q){
 app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $http, mq){
 
 	$scope.isConnected=false;
-	$scope.message="your message here";
 	$scope.topic="/world";
 	$scope.subscriptions=[];
 	$scope.error = '';

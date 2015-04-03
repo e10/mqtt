@@ -37,13 +37,13 @@
                     <div class="panel panel-default">
                       <div class="panel-heading">{{item.topic}}</div>
                       <div class="panel-body">
-                        <div ng-repeat="msg in item.messages">
-                            {{msg}}
+                        <div ng-repeat="msg in item.messages track by $index">
+                            <p>{{msg}}</p>
                         </div>
                       </div>
                       <div class="panel-footer">
                         <div class="input-group">
-                          <input type="text" value="{{item.message}}" class="form-control" placeholder="your message here..." />
+                          <input type="text" ng-model="item.message" class="form-control" placeholder="your message here..." />
                             <span class="input-group-btn">
                             <button class="btn btn-success" ng-click="item.send()" type="button">Send</button>
                             <button class="btn btn-danger" ng-click="item.unsubscribe()" type="button">x</button>
