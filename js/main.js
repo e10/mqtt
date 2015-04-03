@@ -94,7 +94,7 @@ app.factory('MQQTNG',function($http,$q){
 			this.client.connect(params);
 		}
 	};
-	return new Connector({host:'messagesight.demos.ibm.com',port:1883,id:'client87758'});
+	return new Connector({host:'messagesight.demos.ibm.com',port:1883,id:'client'+Number(new Date())});
 });
 
 app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $http, mq){
