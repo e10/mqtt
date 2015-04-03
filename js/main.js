@@ -2,114 +2,133 @@
 var app = angular.module('app',[]);
 
 app.factory('MQQTNG',function($http,$q){
-	return Paho.MQTT;
+
+	function Connector(args){
+		var that=this;
+		this.config=args;
+		this.client=new Paho.MQTT.Client(args.host, Number(args.port),args.id);
+		this.client.onConnectionLost = function(responseObject) {
+			that.isConnected=false;
+		  	if (responseObject.errorCode !== 0) that.emit('error',responseObject);
+			that.emit('disconnect',responseObject);
+		};
+		this.client.onMessageArrived = function(msg) {
+			that.subscriptions[msg.destinationName].messages.push(msg.payloadString);
+			that.messages.push(msg);
+			that.emit('message',{message:msg.payloadString,topic:msg.destinationName});
+		};
+		this.events={};
+		this.messages=[];
+		this.subscriptions=[];
+		this.connect();
+	};
+
+	Connector.prototype.on =function(event,cb){
+		this.events[event]=this.events[event]||[];
+		if(typeof(cb)==='function'){
+			this.events[event].push(cb);
+		}else{
+			throw 'event on should be a callback function';
+		}
+	}
+
+	Connector.prototype.emit =function(event,result){
+		var calls=this.events[event];
+		if(calls){
+			for(var x in calls){
+				if(typeof(calls[x])==='function'){
+					calls[x].apply(this,[result]);
+				}
+			}
+		}
+	}
+
+	Connector.prototype.disconnect=function(){
+		if(this.isConnected){
+			this.isConnected=false;
+			this.client.disconnect();
+		}
+	}
+
+	Connector.prototype.subscribe=function(topic){
+		var that=this;
+		var sub={ topic:topic,messages:[],message:'Your message here',
+			unsubscribe:function(){
+				if(that.isConnected){
+					that.client.unsubscribe(topic);
+					if(that.subscriptions[topic]) delete that.subscriptions[topic];
+					that.emit('unsubscribed',sub);
+				}
+			},
+			send:function(){
+				var msg = new Paho.MQTT.Message(this.message);
+				msg.destinationName=this.topic;
+				that.client.send(msg);				
+			}
+		};
+		that.client.subscribe(topic);
+		that.subscriptions[topic]=sub;
+		that.emit('subscribed',sub);
+	}
+
+	Connector.prototype.connect = function() {
+		var that=this;
+		function _onConnected(e) {
+			that.isConnected=true;
+			that.emit('connected',e);
+		};
+
+		function _onFailed(e){
+			that.error='connection failed';
+			that.emit('error',e);		
+		}
+
+		if(!this.isConnected){
+			var conf=this.config;
+			var params={onSuccess:_onConnected,onFailure:_onFailed};
+			if(!!conf.userName){ params.userName=conf.userName; }
+			if(!!conf.password){ params.password=conf.password; }
+			if(!!conf.cleanSession){ params.cleanSession=conf.cleanSession; }
+			if(!!conf.useSSL){ params.useSSL=conf.useSSL; }
+			this.client.connect(params);
+		}
+	};
+	return new Connector({host:'messagesight.demos.ibm.com',port:1883,id:'client87758'});
 });
 
 app.controller('appController',['$scope', '$http', 'MQQTNG', function($scope, $http, mq){
-	$scope.host='messagesight.demos.ibm.com';
-	$scope.port=1883;
-	$scope.path='/mqtt';
-	$scope.clientId='Client87758';
 
-	//connection details
-	$scope.userName='';
-	$scope.password='';
-	$scope.cleanSession=false;
-	$scope.useSSL=false;
-	$scope.hideBelow=true;
-
-	//state values;
 	$scope.isConnected=false;
-	$scope.stateNext='Connect';
-	$scope.status='Idle';
-	$scope.error='';
-
-	//publish
 	$scope.message="your message here";
-	$scope.qos=0;
-	$scope.destinationName="/world";
+	$scope.topic="/world";
 	$scope.subscriptions=[];
-	$scope.messages=[];
+	$scope.error = '';
 
-	var client;
+	mq.on('message',function(msg){
+		$scope.$digest();
+	})
 
-	$scope.qos = ['0','1','2'];
+	mq.on('connected',function(msg){
+		$scope.isConnected=true;
+		$scope.$digest();
+	})
 
-	$scope.connectOrDisconnect = function(){
+	mq.on('subscribed',function(sub){
+		$scope.topic="";
+		$scope.subscriptions.push(sub);
+	})
 
-		if(client && client.isConnected()){
-			client.disconnect();
-			$scope.stateNext='Connect';
-			return;
-		}
+	mq.on('unsubscribed',function(sub){
+		$scope.subscriptions.splice($scope.subscriptions.indexOf(sub),1);
+	})
 
-		$scope.stateNext='Connecting';
-
-		client = new mq.Client($scope.host, Number($scope.port), $scope.clientId);
-		client.onConnectionLost = onConnectionLost;
-		client.onMessageArrived = onMessageArrived;
-
-		function onConnect() {
-			$scope.status='Connected';
-			$scope.hideBelow=false;
-			$scope.isConnected=true;
-			$scope.stateNext='Disconnect';
-			$scope.$apply();
-		};
-
-		function onConnectionLost(responseObject) {
-		  	$scope.status='Disconnected';
-		  	$scope.hideBelow=true;
-			$scope.isConnected=false;
-		  	if (responseObject.errorCode !== 0)
-				console.log("onConnectionLost:"+responseObject.errorMessage);
-			$scope.$apply();
-		};
-
-		function onMessageArrived(message) {
-			$scope.messages.push(message);
-		  	console.log("onMessageArrived",message);
-		  	$scope.$apply();
-		};
-
-		if(!$scope.isConnected){
-			var p={onSuccess:onConnect,onFailure:function(e){
-				$scope.status='Failed : '+e.errorMessage;
-				$scope.stateNext='Connect';
-				$scope.error='connection failed';
-			}};
-			if(!!$scope.userName){ p.userName=$scope.userName; }
-			if(!!$scope.password){ p.password=$scope.password; }
-			if(!!$scope.cleanSession){ p.cleanSession=$scope.cleanSession; }
-			if(!!$scope.useSSL){ p.useSSL=$scope.useSSL; }
-			client.connect(p);
-		}else{
-			$scope.disconnect();
-		}
-	};
-
-	$scope.disconnect=function(){
-		$scope.status='Disconnected';
-	}
-
-	$scope.publish = function(){
-		var message = new mq.Message($scope.message);
-		message.destinationName =$scope.topic;
-		client.send(message);
-	};
-	$scope.subscribeConnection = function(){
-		client.subscribe($scope.destinationName);
-		$scope.subscriptions.push({
-			value:$scope.destinationName,
-			unsubscribe:function(){
-				client.unsubscribe(this.value);
-				$scope.subscriptions.splice($scope.subscriptions.indexOf(this),1);
-			}
-		})
-		$scope.topic=$scope.destinationName;
-		$scope.destinationName="";
-		$scope.$apply();
-		console.log('Subscribe Triggered')
+	mq.on('error',function(err){
+		$scope.hasError=true;
+		$scope.error=err.errorMessage;
+	})
+	
+	$scope.subscribe = function(){
+		mq.subscribe($scope.topic);
 	};
 
 }]);
